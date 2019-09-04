@@ -1,0 +1,1 @@
+new webit.RangeSlider.default(document.querySelector('.rangeslider'))

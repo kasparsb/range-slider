@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0, user-scalable=0">
+    <title>Range slider</title>
+    <link rel="stylesheet" href="../build/rangeslider.min.css" type='text/css' media='all' />
+    <style>
+        .app {
+            max-width: 300px;
+            padding-top: 100px;
+            margin-left: auto;
+            margin-right: auto;
+
+            min-height: 100vh;
+
+            padding-bottom: 40px;
+
+            overflow: hidden;
+        }
+
+        .__rangeslider {
+            margin-top: 20px;
+            margin-left: 4px;
+
+            width: 200px;
+        }
+        .__rangeslider__swipe {
+            background: rgba(245, 48, 48, 0.2)
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="app">
+        <div class="rangeslider">
+            <div class="rangeslider__track"></div>
+            <a class="rangeslider__pin"></a>
+            <div class="rangeslider__swipe"></div>
+        </div>
+
+        <div style="margin-top:80px">
+            <input type="range" steps="100" min="1" max="100" style="width: 100%" />
+        </div>
+    </div>
+
+
+    <script src="../build/rangeslider.min.js"></script>
+    <script src="basic.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+.rangeslider {
+    @height: 20px;
+    @trackHeight: 6px;
+
+    position: relative;
+
+    height: @height - ((@height - @trackHeight)/2);
+    padding-top: (@height - @trackHeight)/2;
+
+    &__track {
+        height: @trackHeight;
+        overflow: hidden;
+        background: silver;
+        border-radius: 4px;
+    }
+
+    &__pin {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: @height - 2px;
+        height: @height - 2px;
+        border-radius: 50%;
+        border: 1px solid gray;
+        background: #fff;
+        overflow: hidden;
+        z-index: 1
+    }
+
+    &__swipe {
+        display: block;
+        position: absolute;
+        left: 0;
+        width: 100%;
+        top: -20px;
+        bottom: -20px;
+        z-index: 2;
+    }
+}
