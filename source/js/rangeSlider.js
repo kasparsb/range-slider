@@ -147,7 +147,7 @@ RangeSlider.prototype = {
      * Calculate slider value
      */
     calcValue() {
-        this.value = this.position.x / this.elDimensions.width; 
+        this.value = this.boundryX(this.position.x + this.offset.x) / this.elDimensions.width; 
     },
     on(eventName, cb) {
         if (typeof this.listeners[eventName] == "undefined") {
