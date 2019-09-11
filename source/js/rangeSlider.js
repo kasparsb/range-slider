@@ -82,7 +82,7 @@ RangeSlider.prototype = {
         this.offset.y = ev.offset.y;
 
         this.vizualize();
-        this.calcValue;
+        this.calcValue();
 
         this.fire("move", [this.value]);
     },
@@ -97,7 +97,7 @@ RangeSlider.prototype = {
         this.position.y = this.boundryY(this.translateY(ev.y) - (this.pinDimensions.height/2));
 
         this.vizualize();
-        this.calcValue;
+        this.calcValue();
 
         this.fire("move", [this.value]);
     },
