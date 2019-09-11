@@ -84,7 +84,7 @@ RangeSlider.prototype = {
         this.vizualize();
         this.calcValue;
 
-        this.fire("move"), [this.value]);
+        this.fire("move", [this.value]);
     },
     handleTap(ev) {
         /**
