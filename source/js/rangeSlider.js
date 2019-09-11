@@ -30,6 +30,9 @@ function RangeSlider(el) {
 
     this.safePadding = 40;
 
+    // Event listeners
+    this.listeners = [];
+
     this.setEvents();
 }
 
@@ -74,6 +77,8 @@ RangeSlider.prototype = {
         this.offset.y = ev.offset.y;
 
         this.vizualize();
+
+        this.fire("move");
     },
     handleTap(ev) {
         /**
@@ -86,6 +91,8 @@ RangeSlider.prototype = {
         this.position.y = this.boundryY(this.translateY(ev.y) - (this.pinDimensions.height/2));
 
         this.vizualize();
+
+        this.fire("move");
     },
     validateMoveStartPosition(x, y) {
         this.safePadding
@@ -128,6 +135,15 @@ RangeSlider.prototype = {
     },
     setTransform(el, x, y) {
         el.style.transform = 'translate('+x+'px,'+y+'px)'
+    },
+    on(eventName, cb) {
+        this.listeners[eventName].push(cb)
+    },
+    fire(eventName, args) {
+        if (typeof this.listeners[eventName] == "undefined") {
+            return;
+        }
+        this.listeners[eventName].apply(this, args);
     }
 }
 
