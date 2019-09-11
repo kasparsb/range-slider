@@ -31,7 +31,7 @@ function RangeSlider(el) {
     this.safePadding = 40;
 
     // Event listeners
-    this.listeners = [];
+    this.listeners = {};
 
     this.setEvents();
 }
@@ -137,6 +137,9 @@ RangeSlider.prototype = {
         el.style.transform = 'translate('+x+'px,'+y+'px)'
     },
     on(eventName, cb) {
+        if (this.listeners[eventName] == "undefined") {
+            this.listeners[eventName] = [];
+        }
         this.listeners[eventName].push(cb)
     },
     fire(eventName, args) {
