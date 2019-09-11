@@ -137,7 +137,7 @@ RangeSlider.prototype = {
         el.style.transform = 'translate('+x+'px,'+y+'px)'
     },
     on(eventName, cb) {
-        if (this.listeners[eventName] == "undefined") {
+        if (typeof this.listeners[eventName] == "undefined") {
             this.listeners[eventName] = [];
         }
         this.listeners[eventName].push(cb)
