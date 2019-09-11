@@ -26,6 +26,10 @@ function RangeSlider(el) {
         y: 0
     }
 
+    this.min = 0;
+    this.max = 1;
+    this.value = 0;
+
     this.swipe = this.createSwipe(this.swipeEl)
 
     this.safePadding = 40;
@@ -34,6 +38,7 @@ function RangeSlider(el) {
     this.listeners = {};
 
     this.setEvents();
+    this.calcValue();
 }
 
 RangeSlider.prototype = {
@@ -77,8 +82,9 @@ RangeSlider.prototype = {
         this.offset.y = ev.offset.y;
 
         this.vizualize();
+        this.calcValue;
 
-        this.fire("move");
+        this.fire("move"), [this.value]);
     },
     handleTap(ev) {
         /**
@@ -91,8 +97,9 @@ RangeSlider.prototype = {
         this.position.y = this.boundryY(this.translateY(ev.y) - (this.pinDimensions.height/2));
 
         this.vizualize();
+        this.calcValue;
 
-        this.fire("move");
+        this.fire("move", [this.value]);
     },
     validateMoveStartPosition(x, y) {
         this.safePadding
@@ -135,6 +142,12 @@ RangeSlider.prototype = {
     },
     setTransform(el, x, y) {
         el.style.transform = 'translate('+x+'px,'+y+'px)'
+    },
+    /**
+     * Calculate slider value
+     */
+    calcValue() {
+        this.value = this.position.x / this.elDimensions.width; 
     },
     on(eventName, cb) {
         if (typeof this.listeners[eventName] == "undefined") {
