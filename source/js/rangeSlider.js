@@ -146,7 +146,9 @@ RangeSlider.prototype = {
         if (typeof this.listeners[eventName] == "undefined") {
             return;
         }
-        this.listeners[eventName].apply(this, args);
+        for (let i = 0; i < this.listeners[eventName].length; i++) {
+           this.listeners[eventName][i].apply(this, args); 
+        }
     }
 }
 
