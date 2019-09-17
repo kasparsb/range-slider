@@ -1,6 +1,8 @@
 .rangeslider {
     @height: 20px;
     @trackHeight: 6px;
+    @trackColor: #d8d8d8;
+    @color: #4cc0ff;
 
     position: relative;
 
@@ -10,8 +12,15 @@
     &__track {
         height: @trackHeight;
         overflow: hidden;
-        background: silver;
+        background: @trackColor;
         border-radius: 4px;
+    }
+
+    &__track-fill {
+        height: @trackHeight;
+        width: 0;
+        overflow: hidden;
+        background-color: @color;
     }
 
     &__pin {
@@ -22,19 +31,8 @@
         width: @height - 2px;
         height: @height - 2px;
         border-radius: 50%;
-        border: 1px solid gray;
-        background: #fff;
+        background: @color;
         overflow: hidden;
-        z-index: 1
-    }
-
-    &__swipe {
-        display: block;
-        position: absolute;
-        left: 0;
-        width: 100%;
-        top: -20px;
-        bottom: -20px;
-        z-index: 2;
+        z-index: 1;
     }
 }
