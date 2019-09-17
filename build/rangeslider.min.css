@@ -1,1 +1,29 @@
-.rangeslider{position:relative;height:13px;padding-top:7px}.rangeslider__track{height:6px;overflow:hidden;background:silver;border-radius:4px}.rangeslider__pin{display:block;position:absolute;top:0;left:0;width:18px;height:18px;border-radius:50%;border:1px solid gray;background:#fff;overflow:hidden;z-index:1}.rangeslider__swipe{display:block;position:absolute;left:0;width:100%;top:-20px;bottom:-20px;z-index:2}
+.rangeslider {
+  position: relative;
+  height: 13px;
+  padding-top: 7px;
+}
+.rangeslider__track {
+  height: 6px;
+  overflow: hidden;
+  background: #d8d8d8;
+  border-radius: 4px;
+}
+.rangeslider__track-fill {
+  height: 6px;
+  width: 0;
+  overflow: hidden;
+  background-color: #4cc0ff;
+}
+.rangeslider__pin {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #4cc0ff;
+  overflow: hidden;
+  z-index: 1;
+}
