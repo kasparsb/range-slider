@@ -1,11 +1,10 @@
+import createEl from './createEl';
+
 function createElIfNotExists(parent, className, tagName) {
     let el = parent.querySelector('.'+className);
 
-    console.log(el);
-
     if (!el) {
-        el = document.createElement(tagName);
-        el.className = className;
+        el = createEl(className, tagName);
         parent.appendChild(el);
     }
 

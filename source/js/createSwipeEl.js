@@ -11,11 +11,16 @@ function createSwipeEl(parent) {
 function applyStyle(el) {
     el.style.display = 'block';
     el.style.position = 'absolute';
-    el.style.left = '0';
-    el.style.width = '100%';
-    el.style.top = '-20px';
-    el.style.bottom = '-20px';
+    
+    
+    el.style.top = '-40px';
+    el.style.bottom = '-40px';
+    el.style.left = '-20px';
+    el.style.right = '-20px';
+
     el.style.zIndex =  '2';
+
+    el.style.background = 'rgba(255,34,34,0.4)'
 }
 
 export default createSwipeEl;
