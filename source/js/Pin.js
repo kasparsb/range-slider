@@ -4,8 +4,27 @@ import isBetween from './isBetween';
 import setCssTransform from './setCssTransform';
 import getElementOuterDimensions from './getElementOuterDimensions';
 
+function roundToWholeStep(value, stepsCount, width) {
+    let stepWidth = width / stepsCount;
+
+    let remainder = value % stepWidth;
+    
+    // Ja atlikums ir mazāks par puse no stepWidth, tad x = x % stepWidth
+    // Ja atlikums ir lielāks par puse no stepWidth, tad x = (x % stepWidth) + stepWidth
+    if (remainder < (stepWidth / 2)) {
+        // Remove remainder to go full step backwards
+        return value - remainder;
+    }
+    else {
+        // Go to next full step
+        return (value - remainder) + stepWidth;
+    }
+}
+
 function Pin(el) {
     this.el = el ? el : createEl('rangeslider__pin', 'a');
+
+    this.vizualizeCb = function(){};
 
     this.prev = undefined;
     this.next = undefined;
@@ -18,6 +37,11 @@ function Pin(el) {
     this.parentDimensions = undefined;
 
     this.safePadding = undefined;
+
+    this.steps = {
+        x: Infinity,
+        y: Infinity
+    }
 
     /**
      * Real position in parent element
@@ -42,6 +66,10 @@ function Pin(el) {
 }
 Pin.prototype = {
     
+    onVizualize(cb) {
+        this.vizualizeCb = cb;
+    },
+
     setSafePadding(padding) {
         this.safePadding = padding;
     },
@@ -57,6 +85,8 @@ Pin.prototype = {
 
     setIndex(index) {
         this.index = index;
+
+        this.el.className = 'rangeslider__pin rangeslider__pin-'+this.index;
     },
 
     setValue(value) {
@@ -69,6 +99,11 @@ Pin.prototype = {
      */
     setBoundry(boundry) {
 
+    },
+
+    setSteps(steps) {
+        this.steps.x = steps.x;
+        this.steps.y = steps.y;
     },
 
     setPrev(pin) {
@@ -109,9 +144,11 @@ Pin.prototype = {
             //this.boundryY(this.position.y + this.offset.y),
             0
         )
+
+        this.fireVizualize();
     },
 
-    resize() {
+    resize(isInitialSetup) {
         this.dimensions = getElementOuterDimensions(this.el);
 
         // Recalculate position based on parent element dimensions
@@ -120,7 +157,9 @@ Pin.prototype = {
 
         this.calcValue();
 
-        this.vizualize();
+        if (!isInitialSetup) {
+            this.vizualize();    
+        }        
     },
 
     calcValue() {
@@ -172,6 +211,13 @@ Pin.prototype = {
         )
     },
 
+    getPosition() {
+        return {
+            x: this.boundryX(this.position.x + this.offset.x),
+            y: this.boundryY(this.position.y + this.offset.y)
+        }
+    },
+
     isY(y) {
         return isBetween(
             y,
@@ -187,8 +233,29 @@ Pin.prototype = {
         }
 
         let max = this.parentDimensions.width - this.dimensions.width;
+        /**
+         * Gadījumā, ja soļu skaits nav vesels skaitlis (piem., 8.5)
+         * Pārbaudām tieši >0, jo steps.x=Infinity gadījumā ir NaN
+         * Tikai decimāl skaitļa gadījumā būs >0
+         */
+        if (this.steps.x % 1 > 0) {
+            // (700 / 8.5) * 8 - šādi dabūsim max platumu pilniem soļiem
+            max = ((this.parentDimensions.width / this.steps.x) * Math.floor(this.steps.x)) - this.dimensions.width;
+        }
         if (this.next) {
             max = this.next.position.x - this.dimensions.width;
+        }
+
+        /**
+         * šeit x jau ir ierobežot min max robežās
+         * tagad vajag piesiet x solim (step)
+         *
+         * soļa reālais platums - this.parentDimensions.width / steps
+         */
+
+        // Round x to whole steps
+        if (this.steps.x !== Infinity) {
+            x = roundToWholeStep(x, this.steps.x, this.parentDimensions.width);
         }
 
         return boundry(x, min, max);
@@ -196,6 +263,10 @@ Pin.prototype = {
 
     boundryY(y) {
         return boundry(y, 0, this.parentDimensions.height - this.dimensions.height)
+    },
+
+    fireVizualize() {
+        this.vizualizeCb(this);
     }
 }
 

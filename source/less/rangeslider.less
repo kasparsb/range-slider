@@ -10,6 +10,7 @@
     padding-top: (@height - @trackHeight)/2;
 
     &__track {
+        position: relative;
         height: @trackHeight;
         overflow: hidden;
         background: @trackColor;
@@ -17,6 +18,9 @@
     }
 
     &__track-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
         height: @trackHeight;
         width: 0;
         overflow: hidden;

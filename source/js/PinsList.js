@@ -1,12 +1,6 @@
-import formatPinsConfiguration from './formatPinsConfiguration';
 import Pin from './Pin';
-
-function findNodeByIndex(nodeList, index) {
-    if (index < nodeList.length) {
-        return nodeList[index];
-    }
-    return false;
-}
+import findNodeByIndex from './findNodeByIndex';
+import formatPinsConfiguration from './formatPinsConfiguration';
 
 /**
  * Atlasām tikai norādītos properties from data
@@ -41,13 +35,15 @@ function pickValueIfSingleProp(props, data) {
  *         }
  *     }
  */
-function PinsList(pinsConfiguartion, safePadding, container) {
+function PinsList(pinsConfiguartion, steps, safePadding, container) {
     this.container = container;
+
+    this.vizualizeCb = function(){}
 
     // Atlasām jau dom esošos pin elementus, lai tos izmantotu
     let alreadyDefinedPinElements = container.querySelectorAll('.rangeslider__pin');
 
-    pinsConfiguartion = formatPinsConfiguration(pinsConfiguartion);
+    pinsConfiguartion = formatPinsConfiguration(pinsConfiguartion, steps);
 
     // Create pins from configuration
     this.items = pinsConfiguartion.map(conf => {
@@ -57,8 +53,11 @@ function PinsList(pinsConfiguartion, safePadding, container) {
         pin.setIndex(conf.index);
         pin.setValue(conf.value);
         pin.setBoundry(conf.boundry);
+        pin.setSteps(steps);
 
         pin.setSafePadding(safePadding);
+
+        pin.onVizualize(pin => this.handlePinVizualize(pin))
 
         this.container.appendChild(pin.el)
 
@@ -83,12 +82,29 @@ function PinsList(pinsConfiguartion, safePadding, container) {
     }
 }
 PinsList.prototype = {
+    onVizualize(cb) {
+        this.vizualizeCb = cb;
+    },
+
+    handlePinVizualize(pin) {
+        // Savācam visu pins reālās pozīcijas
+        this.vizualizeCb(this.items.map(pin => {
+            let p = pin.getPosition();
+
+            return {
+                index: pin.index,
+                x: p.x,
+                y: p.y
+            }
+        }))
+    },
+
     vizualize() {
         this.items.forEach(pin => pin.vizualize());
     },
 
-    resize(parentDimensions) {
-        this.items.forEach(pin => pin.resize())
+    resize(isInitialSetup) {
+        this.items.forEach(pin => pin.resize(isInitialSetup))
     },
 
     setParentDimensions(parentDimensions) {
@@ -100,6 +116,10 @@ PinsList.prototype = {
      */
     getValues(props) {
         return this.items.map(pin => pickValueIfSingleProp(props, pin.value));
+    },
+
+    getCount() {
+        return this.items.length;
     },
 
     /**

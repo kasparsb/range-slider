@@ -1,13 +1,15 @@
-import Swipe from 'swipe';
-import boundry from './boundry';
-import getElementOffset from './getElementOffset';
 import getElementOuterDimensions from './getElementOuterDimensions';
-import isBetween from './isBetween';
-import createSwipeEl from './createSwipeEl';
 import createElIfNotExists from './createElIfNotExists';
+import getElementOffset from './getElementOffset';
 import setCssTransform from './setCssTransform';
-import config from './config';
+import TrackFillsList from './TrackFillsList';
+import createSwipeEl from './createSwipeEl';
+import isBetween from './isBetween';
 import PinsList from './PinsList';
+import boundry from './boundry';
+import config from './config';
+import Swipe from 'swipe';
+
 
 function arrayFirstIfSingleItem(arr) {
     return arr.length == 1 ? arr[0] : arr;
@@ -18,6 +20,19 @@ function RangeSlider(el, configuration) {
     this.config = new config(configuration);
 
     this.safePadding = this.config.get('safePadding', 40);
+
+
+    this.min = this.config.get('min', {x:0, y:0});
+    this.max = this.config.get('max', {x:1, y:1});
+    this.step = this.config.get('step', {x:0, y:0});
+    /**
+     * Ja step ir 0, tad steps skaits būs Infinity
+     * tas ir neierobežots skaits soļu
+     */
+    this.steps = {
+        x: (this.max.x - this.min.x) / this.step.x,
+        y: (this.max.y - this.min.y) / this.step.y
+    }
 
     /**
      * konfigurācija, masīvs ar virzieniem kādos darbojas slider
@@ -33,12 +48,13 @@ function RangeSlider(el, configuration) {
 
     this.swipeEl = createSwipeEl(this.el);
     this.trackEl = createElIfNotExists(this.el, 'rangeslider__track', 'div');
-    this.trackFillEl = createElIfNotExists(this.trackEl, 'rangeslider__track-fill', 'div');
 
     this.elOffset = undefined;
     this.elDimensions = undefined;
     
-    this.pins = new PinsList(this.config.get('pins', 1), this.safePadding, this.el);
+    this.pins = new PinsList(this.config.get('pins', 1), this.steps, this.safePadding, this.el);
+
+    this.trackFills = new TrackFillsList(this.pins.getCount(), this.trackEl);
 
     this.swipe = this.createSwipe(this.swipeEl)
 
@@ -48,10 +64,10 @@ function RangeSlider(el, configuration) {
     // Window resize timeout
     this.wrt = 0;
 
-    this.resize(true);
-
     this.setEvents();
-    // this.calcValue();
+
+
+    this.resize(true);
 }
 
 RangeSlider.prototype = {
@@ -70,20 +86,25 @@ RangeSlider.prototype = {
         if (this.config.get('handleWindowResize', false)) {
             window.addEventListener('resize', ev => this.handleWindowResize());
         }
+
+        this.pins.onVizualize(pinsPosition => this.trackFills.vizualize(pinsPosition));
     },
     resize(isInitialSetup) {
         // Nolasām visa elementa dimensijas
         this.elOffset = getElementOffset(this.el);
         this.elDimensions = getElementOuterDimensions(this.el);
         
-        // Sagatvojam pins
+
         this.pins.setParentDimensions(this.elDimensions);
-        this.pins.resize(this.elDimensions);
+        this.pins.resize(isInitialSetup);
+
+        this.trackFills.resize(isInitialSetup);
+
+        // Vizualizējam izmaiņas
         this.pins.vizualize();
 
         if (!isInitialSetup) {
-            //this.calcValue();
-            //this.fire('move', [this.value.x, this.value]);    
+            this.fire('move', [this.getValue()]);
         }
     },
     handleWindowResize(ev) {
@@ -139,7 +160,6 @@ RangeSlider.prototype = {
         this.offset.y = 0;
 
         this.isMove = false;
-
 
         this.vizualize();
         this.calcValue();

@@ -20,7 +20,7 @@ function applyStyle(el) {
 
     el.style.zIndex =  '2';
 
-    el.style.background = 'rgba(255,34,34,0.4)'
+    //el.style.background = 'rgba(255,34,34,0.4)'
 }
 
 export default createSwipeEl;

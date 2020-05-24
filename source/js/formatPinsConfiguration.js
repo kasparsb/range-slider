@@ -4,10 +4,10 @@
  *     - number, skaits cik pins vajag
  *     - array masīvs ar pins definīciju
  */
-function formatPinsConfiguration(pins) {
+function formatPinsConfiguration(pins, steps) {
     
     if (typeof pins === 'number') {
-        pins = fromNumber(pins);
+        pins = fromNumber(pins, steps);
     }
 
     return pins.map(appendDefaultParams);
@@ -37,13 +37,17 @@ function appendDefaultParams(pin, index) {
     return pin
 }
 
-function fromNumber(count) {
+function fromNumber(count, steps) {
+    /**
+     * Ja steps ir neirobežots, tad vienmērīgi sadalām platumu pa visiem pins
+     */
+
     let r = [];
     for (let i = 0; i < count; i++) {
         r.push({
             value: {
-                x: i * (1 / count),
-                y: 0
+                x: i * (1 / (steps.x === Infinity ? count : steps.x)),
+                y: i * (1 / (steps.y === Infinity ? count : steps.y))
             }
         });
     }
