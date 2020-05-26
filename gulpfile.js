@@ -14,7 +14,7 @@ var babelify = require('babelify');
 var pkg = require('./package.json');
 
 var files = {
-    js: './source/js/rangeSlider.js',
+    js: './source/js/RangeSlider.js',
     less: './source/less/rangeslider.less',
     lesss: './source/less/**/*.less',
     dest: './build'
