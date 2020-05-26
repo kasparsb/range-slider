@@ -70,7 +70,6 @@ TrackFillsList.prototype = {
         }
 
         if (needRedraw) {
-            console.log('needRedraw');
             this.items[index].el.style.left = this.items[index].left+'px';
             this.items[index].el.style.width = this.items[index].width+'px';
         }

@@ -1,5 +1,8 @@
 import getElementOuterDimensions from './getElementOuterDimensions';
+import formatPinsConfiguration from './formatPinsConfiguration';
 import createElIfNotExists from './createElIfNotExists';
+import valueRelativeToReal from './valueRelativeToReal';
+import valueRealToRelative from './valueRealToRelative';
 import getElementOffset from './getElementOffset';
 import setCssTransform from './setCssTransform';
 import TrackFillsList from './TrackFillsList';
@@ -21,10 +24,9 @@ function RangeSlider(el, configuration) {
 
     this.safePadding = this.config.get('safePadding', 40);
 
-
-    this.min = this.config.get('min', {x:0, y:0});
-    this.max = this.config.get('max', {x:1, y:1});
-    this.step = this.config.get('step', {x:0, y:0});
+    this.min = this.config.get('min', {x: 0, y: 0});
+    this.max = this.config.get('max', {x: 1, y: 1});
+    this.step = this.config.get('step', {x: 0, y: 0});
     /**
      * Ja step ir 0, tad steps skaits būs Infinity
      * tas ir neierobežots skaits soļu
@@ -33,6 +35,12 @@ function RangeSlider(el, configuration) {
         x: (this.max.x - this.min.x) / this.step.x,
         y: (this.max.y - this.min.y) / this.step.y
     }
+
+    this.pinsConfiguartion = formatPinsConfiguration(
+        this.config.get('pins', 1), 
+        this.steps, 
+        value => this.convertValueRealToRelative(value)
+    );
 
     /**
      * konfigurācija, masīvs ar virzieniem kādos darbojas slider
@@ -52,7 +60,13 @@ function RangeSlider(el, configuration) {
     this.elOffset = undefined;
     this.elDimensions = undefined;
     
-    this.pins = new PinsList(this.config.get('pins', 1), this.steps, this.safePadding, this.el);
+
+    this.pins = new PinsList(this.pinsConfiguartion, this.el);
+    // Uzstādām visiem pins steps
+    this.pins.items.forEach(pin => pin.setSteps(this.steps));
+    // Uzstādām visiem safePadding
+    this.pins.items.forEach(pin => pin.setSafePadding(this.safePadding));
+
 
     this.trackFills = new TrackFillsList(this.pins.getCount(), this.trackEl);
 
@@ -87,6 +101,9 @@ RangeSlider.prototype = {
             window.addEventListener('resize', ev => this.handleWindowResize());
         }
 
+        /**
+         * @todo Pārtaisīt, lai events ir tikai uz to pin, kurš reāli maina pozīciju
+         */
         this.pins.onVizualize(pinsPosition => this.trackFills.vizualize(pinsPosition));
     },
     resize(isInitialSetup) {
@@ -117,14 +134,15 @@ RangeSlider.prototype = {
      */
     handleStart(ev) {
         //console.log("handleStart", this.position.x, this.offset.x); 
-        console.log("handleStart"); 
 
         this.isMove = false;
-        
+
         this.pin = this.pins.findByPosition(this.translateX(ev.x), this.translateY(ev.y));
         if (this.pin) {
             this.isMove = true;
             this.pin.startMove();
+
+            this.fire('startmove', [this.getValue()]);
         }
     },
     handleEnd(ev) {
@@ -135,6 +153,9 @@ RangeSlider.prototype = {
         this.pin.endMove();
 
         this.isMove = false;
+
+        this.fire('change', [this.getValue()]);
+        this.fire('endmove', [this.getValue()]);
     },
     handleMove(ev) {
         if (!this.isMove) {
@@ -143,7 +164,7 @@ RangeSlider.prototype = {
 
         this.pin.move(ev.offset.x, ev.offset.y);
 
-        this.fire('move', [this.getValue()]);
+        this.fire('move', [this.formatPinForMoveEvent(this.pin)]);
     },
     handleTap(ev) {
         /**
@@ -164,7 +185,7 @@ RangeSlider.prototype = {
         this.vizualize();
         this.calcValue();
 
-        this.fire("move", [this.value.x, this.value]);
+        this.fire('move', [this.value.x, this.value]);
     },
     translateX(x) {
         return x - this.elOffset.left
@@ -184,7 +205,36 @@ RangeSlider.prototype = {
      * apzīmē pin indeksu
      */
     getValue() {
-        return arrayFirstIfSingleItem(this.pins.getValues(this.direction));
+        return arrayFirstIfSingleItem(
+            this.pins.getValues(this.direction, value => this.convertValueRelativeToReal(value))
+        );
+    },
+    getPins() {
+        return arrayFirstIfSingleItem(
+            this.pins.getPins(this.direction, value => this.convertValueRelativeToReal(value))
+        );
+    },
+    /**
+     * Konvertējam reālo padoto vērtību uz iekšējās lietošanas vērtību (0..1)
+     */
+    convertValueRealToRelative(value) {
+        return {
+            x: valueRealToRelative(value.x, this.min.x, this.max.x),
+            y: valueRealToRelative(value.y, this.min.y, this.max.y)    
+        }
+    },
+    /**
+     * Konvertējam iekšējās lietošanas relatīvās vērtības (0..1)
+     * uz reālajā vērtībā, kuras sākotnēji tikai padotas no ārpuses
+     */
+    convertValueRelativeToReal(value) {
+        return {
+            x: valueRelativeToReal(value.x, this.min.x, this.max.x, this.step.x),
+            y: valueRelativeToReal(value.y, this.min.y, this.max.y, this.step.y)
+        }
+    },
+    formatPinForMoveEvent(pin) {
+        return this.pins.getPin(this.direction, pin, value => this.convertValueRelativeToReal(value));
     },
     on(eventName, cb) {
         if (typeof this.listeners[eventName] == "undefined") {

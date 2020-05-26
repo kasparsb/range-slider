@@ -1,6 +1,6 @@
 import Pin from './Pin';
 import findNodeByIndex from './findNodeByIndex';
-import formatPinsConfiguration from './formatPinsConfiguration';
+
 
 /**
  * Atlasām tikai norādītos properties from data
@@ -35,15 +35,13 @@ function pickValueIfSingleProp(props, data) {
  *         }
  *     }
  */
-function PinsList(pinsConfiguartion, steps, safePadding, container) {
+function PinsList(pinsConfiguartion, container) {
     this.container = container;
 
     this.vizualizeCb = function(){}
 
     // Atlasām jau dom esošos pin elementus, lai tos izmantotu
     let alreadyDefinedPinElements = container.querySelectorAll('.rangeslider__pin');
-
-    pinsConfiguartion = formatPinsConfiguration(pinsConfiguartion, steps);
 
     // Create pins from configuration
     this.items = pinsConfiguartion.map(conf => {
@@ -53,9 +51,6 @@ function PinsList(pinsConfiguartion, steps, safePadding, container) {
         pin.setIndex(conf.index);
         pin.setValue(conf.value);
         pin.setBoundry(conf.boundry);
-        pin.setSteps(steps);
-
-        pin.setSafePadding(safePadding);
 
         pin.onVizualize(pin => this.handlePinVizualize(pin))
 
@@ -82,10 +77,17 @@ function PinsList(pinsConfiguartion, steps, safePadding, container) {
     }
 }
 PinsList.prototype = {
+
+    /**
+     * @todo Pārtaisīt, lai events ir tikai uz to pin, kurš reāli maina pozīciju
+     */
     onVizualize(cb) {
         this.vizualizeCb = cb;
     },
 
+    /**
+     * @todo Pārtaisīt, lai events ir tikai uz to pin, kurš reāli maina pozīciju
+     */
     handlePinVizualize(pin) {
         // Savācam visu pins reālās pozīcijas
         this.vizualizeCb(this.items.map(pin => {
@@ -114,8 +116,26 @@ PinsList.prototype = {
     /**
      * Savācam visu pins values
      */
-    getValues(props) {
-        return this.items.map(pin => pickValueIfSingleProp(props, pin.value));
+    getValues(valueProps, convertValueCb) {
+        return this.items.map(pin => pickValueIfSingleProp(valueProps, convertValueCb(pin.value)));
+    },
+
+    getPins(valueProps, convertValueCb) {
+        return this.items.map(pin => {
+            return {
+                el: pin.el,
+                position: pin.getPosition(),
+                value: pickValueIfSingleProp(valueProps, convertValueCb(pin.value))
+            }
+        });
+    },
+
+    getPin(valueProps, pin, convertValueCb) {
+        return {
+            el: pin.el,
+            position: pin.getPosition(),
+            value: pickValueIfSingleProp(valueProps, convertValueCb(pin.value))
+        }
     },
 
     getCount() {

@@ -4,19 +4,19 @@
  *     - number, skaits cik pins vajag
  *     - array masīvs ar pins definīciju
  */
-function formatPinsConfiguration(pins, steps) {
+function formatPinsConfiguration(pins, steps, convertValueCb) {
     
     if (typeof pins === 'number') {
         pins = fromNumber(pins, steps);
     }
 
-    return pins.map(appendDefaultParams);
+    return pins.map((pin, index) => appendDefaultParams(pin, index, convertValueCb));
 }
 
 /**
  * Pins definīcijai saliekam visas default vērtības
  */
-function appendDefaultParams(pin, index) {
+function appendDefaultParams(pin, index, convertValueCb) {
     pin.index = index;
 
     if (typeof pin.value != 'object') {
@@ -25,6 +25,9 @@ function appendDefaultParams(pin, index) {
             y: 0
         }
     }
+
+    // Par vērtību konvertēšanu loģiku atbild RangeSlider
+    pin.value = convertValueCb(pin.value);
 
     /**
      * @todo Jāpieliek boundry definīcija
@@ -39,7 +42,7 @@ function appendDefaultParams(pin, index) {
 
 function fromNumber(count, steps) {
     /**
-     * Ja steps ir neirobežots, tad vienmērīgi sadalām platumu pa visiem pins
+     * Ja steps ir neierobežots, tad vienmērīgi sadalām platumu pa visiem pins
      */
 
     let r = [];
