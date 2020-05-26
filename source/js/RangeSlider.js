@@ -10,6 +10,7 @@ import TrackFillsList from './TrackFillsList';
 import createSwipeEl from './createSwipeEl';
 import isBetween from './isBetween';
 import PinsList from './PinsList';
+import removeEl from './removeEl';
 import boundry from './boundry';
 import config from './config';
 import Swipe from 'swipe';
@@ -78,10 +79,10 @@ function RangeSlider(el, configuration) {
 
     // Window resize timeout
     this.wrt = 0;
+    // Window resize funkcija. Lai varētu noņemt event listener
+    this.handleWindowResizeFn = undefined;
 
     this.setEvents();
-
-
     this.resize(true);
 }
 
@@ -99,13 +100,22 @@ RangeSlider.prototype = {
 
         // Pēc noklusējuma netiek handlots window resize
         if (this.config.get('handleWindowResize', false)) {
-            window.addEventListener('resize', ev => this.handleWindowResize());
+            this.handleWindowResizeFn = () => {
+                console.log('resize', this);
+                this.handleWindowResize();
+            }
+            window.addEventListener('resize', this.handleWindowResizeFn);
         }
 
         /**
          * @todo Pārtaisīt, lai events ir tikai uz to pin, kurš reāli maina pozīciju
          */
         this.pins.onVizualize(pinsPosition => this.trackFills.vizualize(pinsPosition));
+    },
+    removeEvents() {
+        if (this.handleWindowResizeFn) {
+            window.removeEventListener('resize', this.handleWindowResizeFn);
+        }
     },
     resize(isInitialSetup) {
         // Nolasām visa elementa dimensijas
@@ -262,6 +272,14 @@ RangeSlider.prototype = {
         for (let i = 0; i < this.listeners[eventName].length; i++) {
            this.listeners[eventName][i].apply(this, args); 
         }
+    },
+    destroy() {
+        this.swipe.destroy();
+        this.removeEvents();
+
+        removeEl(this.swipeEl);
+        removeEl(this.trackEl);
+        this.pins.items.forEach(pin => removeEl(pin.el))
     }
 }
 
