@@ -1,3 +1,5 @@
+import formatPinValue from './formatPinValue';
+
 /**
  * Konvertējam pins definīciju uz vienotu formātu
  * pins varbūt šādi
@@ -19,12 +21,7 @@ function formatPinsConfiguration(pins, steps, convertValueCb) {
 function appendDefaultParams(pin, index, convertValueCb) {
     pin.index = index;
 
-    if (typeof pin.value != 'object') {
-        pin.value = {
-            x: pin.value,
-            y: 0
-        }
-    }
+    pin.value = formatPinValue(pin.value);
 
     // Par vērtību konvertēšanu loģiku atbild RangeSlider
     pin.value = convertValueCb(pin.value);

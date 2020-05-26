@@ -5,6 +5,7 @@ import valueRelativeToReal from './valueRelativeToReal';
 import valueRealToRelative from './valueRealToRelative';
 import getElementOffset from './getElementOffset';
 import setCssTransform from './setCssTransform';
+import formatPinValue from './formatPinValue';
 import TrackFillsList from './TrackFillsList';
 import createSwipeEl from './createSwipeEl';
 import isBetween from './isBetween';
@@ -208,6 +209,18 @@ RangeSlider.prototype = {
         return arrayFirstIfSingleItem(
             this.pins.getValues(this.direction, value => this.convertValueRelativeToReal(value))
         );
+    },
+    setValue(values) {
+        values = values.map(value => formatPinValue(value));
+        
+        values.forEach((value, index) => {
+            this.pins.items[index].setValue({
+                x: valueRealToRelative(value.x, this.min.x, this.max.x),
+                y: valueRealToRelative(value.y, this.min.y, this.max.y)
+            })
+        })
+
+        this.pins.resize();
     },
     getPins() {
         return arrayFirstIfSingleItem(

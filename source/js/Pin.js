@@ -90,6 +90,8 @@ Pin.prototype = {
     },
 
     setValue(value) {
+        console.log(value, this.index);
+
         this.value.x = value.x;
         this.value.y = value.y;
     },
