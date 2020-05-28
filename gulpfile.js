@@ -17,7 +17,7 @@ var files = {
     js: './source/js/RangeSlider.js',
     less: './source/less/rangeslider.less',
     lesss: './source/less/**/*.less',
-    dest: './build'
+    dest: './dist'
 }
 
 /**
