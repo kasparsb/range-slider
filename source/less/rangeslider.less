@@ -24,7 +24,6 @@
         height: @trackHeight;
         width: 0;
         overflow: hidden;
-        background-color: @color;
     }
 
     &__pin {
@@ -38,5 +37,17 @@
         background: @color;
         overflow: hidden;
         z-index: 1;
+    }
+
+    /**
+     * Atkarībā no pins skaits iekrāsojam track fills
+     */
+    &--pins-1 &__track-fill-0,
+    &--pins-2 &__track-fill-1,
+    &--pins-3 &__track-fill-0,
+    &--pins-3 &__track-fill-2,
+    &--pins-4 &__track-fill-1,
+    &--pins-4 &__track-fill-3 {
+        background-color: @color;
     }
 }

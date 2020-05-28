@@ -1,48 +1,33 @@
-import getElementOuterDimensions from './getElementOuterDimensions';
-import formatPinsConfiguration from './formatPinsConfiguration';
-import createElIfNotExists from './createElIfNotExists';
 import valueRelativeToReal from './valueRelativeToReal';
 import valueRealToRelative from './valueRealToRelative';
-import getElementOffset from './getElementOffset';
-import setCssTransform from './setCssTransform';
-import formatPinValue from './formatPinValue';
+import formatValue from './formatValue';
 import TrackFillsList from './TrackFillsList';
 import createSwipeEl from './createSwipeEl';
-import isBetween from './isBetween';
+import createTrackEl from './createTrackEl';
 import PinsList from './PinsList';
-import removeEl from './removeEl';
-import boundry from './boundry';
 import config from './config';
 import Swipe from 'swipe';
 
+import getOuterDimensions from 'dom-helpers/src/getOuterDimensions';
+import getOffset from 'dom-helpers/src/getOffset';
+import create from 'dom-helpers/src/create';
+import removeEl from 'dom-helpers/src/remove';
+import on from  'dom-helpers/src/event/on';
+import off from  'dom-helpers/src/event/off';
 
 function arrayFirstIfSingleItem(arr) {
     return arr.length == 1 ? arr[0] : arr;
 }
 
-function RangeSlider(el, configuration) {
+function isArray(value) {
+    return Object.prototype.toString.call(value) === '[object Array]'
+}
+
+function RangeSlider(configuration) {
 
     this.config = new config(configuration);
 
     this.safePadding = this.config.get('safePadding', 40);
-
-    this.min = this.config.get('min', {x: 0, y: 0});
-    this.max = this.config.get('max', {x: 1, y: 1});
-    this.step = this.config.get('step', {x: 0, y: 0});
-    /**
-     * Ja step ir 0, tad steps skaits būs Infinity
-     * tas ir neierobežots skaits soļu
-     */
-    this.steps = {
-        x: (this.max.x - this.min.x) / this.step.x,
-        y: (this.max.y - this.min.y) / this.step.y
-    }
-
-    this.pinsConfiguartion = formatPinsConfiguration(
-        this.config.get('pins', 1), 
-        this.steps, 
-        value => this.convertValueRealToRelative(value)
-    );
 
     /**
      * konfigurācija, masīvs ar virzieniem kādos darbojas slider
@@ -53,26 +38,40 @@ function RangeSlider(el, configuration) {
      */
     this.direction = this.config.get('direction', ['x']);
 
-    // Swipe dom elements
-    this.el = el;
+    this.min = formatValue(this.config.get('min', {x: 0, y: 0}), this.direction);
+    this.max = formatValue(this.config.get('max', {x: 1, y: 1}), this.direction);
+    this.step = formatValue(this.config.get('step', {x: 0, y: 0}), this.direction);
+    /**
+     * Ja step ir 0, tad steps skaits būs Infinity
+     * tas ir neierobežots skaits soļu
+     */
+    this.steps = {
+        x: (this.max.x - this.min.x) / this.step.x,
+        y: (this.max.y - this.min.y) / this.step.y
+    }
 
+    this.values = this.formatValues(this.config.get('value', 0));
+
+    // Main element and Swipe element
+    this.el = create('div', {
+        className: 'rangeslider rangeslider--pins-'+this.values.length
+    });
     this.swipeEl = createSwipeEl(this.el);
-    this.trackEl = createElIfNotExists(this.el, 'rangeslider__track', 'div');
+    this.trackEl = createTrackEl(this.el);
 
     this.elOffset = undefined;
     this.elDimensions = undefined;
-    
 
-    this.pins = new PinsList(this.pinsConfiguartion, this.el);
-    // Uzstādām visiem pins steps
-    this.pins.items.forEach(pin => pin.setSteps(this.steps));
-    // Uzstādām visiem safePadding
-    this.pins.items.forEach(pin => pin.setSafePadding(this.safePadding));
+    this.pins = new PinsList(this.values, this.el, pin => {
+        pin.setSteps(this.steps);
+        pin.setSafePadding(this.safePadding);
 
+        this.el.appendChild(pin.el)
+    });
 
-    this.trackFills = new TrackFillsList(this.pins.getCount(), this.trackEl);
+    this.trackFills = new TrackFillsList(this.pins.items.length, this.trackEl);
 
-    this.swipe = this.createSwipe(this.swipeEl)
+    this.swipe = new Swipe(this.swipeEl, {direction: 'horizontal'})
 
     // Event listeners
     this.listeners = {};
@@ -80,18 +79,12 @@ function RangeSlider(el, configuration) {
     // Window resize timeout
     this.wrt = 0;
     // Window resize funkcija. Lai varētu noņemt event listener
-    this.handleWindowResizeFn = undefined;
+    this.windowResizeHandler = undefined;
 
     this.setEvents();
-    this.resize(true);
 }
 
 RangeSlider.prototype = {
-    createSwipe(el) {
-        return new Swipe(el, {
-            direction: 'horizontal'
-        })
-    },
     setEvents() {
         this.swipe.on('start', ev => this.handleStart(ev));
         this.swipe.on('move', ev => this.handleMove(ev));
@@ -99,29 +92,25 @@ RangeSlider.prototype = {
         this.swipe.on('tap', ev => this.handleTap(ev));
 
         // Pēc noklusējuma netiek handlots window resize
-        if (this.config.get('handleWindowResize', false)) {
-            this.handleWindowResizeFn = () => {
-                console.log('resize', this);
-                this.handleWindowResize();
-            }
-            window.addEventListener('resize', this.handleWindowResizeFn);
+        if (this.config.get('handleWindowResize', true)) {
+            this.windowResizeHandler = on(window, 'resize', ev => this.handleWindowResize());
         }
 
-        /**
-         * @todo Pārtaisīt, lai events ir tikai uz to pin, kurš reāli maina pozīciju
-         */
         this.pins.onVizualize(pinsPosition => this.trackFills.vizualize(pinsPosition));
     },
     removeEvents() {
-        if (this.handleWindowResizeFn) {
-            window.removeEventListener('resize', this.handleWindowResizeFn);
+        if (this.windowResizeHandler) {
+            off(window, 'resize', this.windowResizeHandler)
         }
+    },
+    render() {
+        setTimeout(() => this.resize(true), 5);
+        return this.el;
     },
     resize(isInitialSetup) {
         // Nolasām visa elementa dimensijas
-        this.elOffset = getElementOffset(this.el);
-        this.elDimensions = getElementOuterDimensions(this.el);
-        
+        this.elOffset = getOffset(this.el);
+        this.elDimensions = getOuterDimensions(this.el);
 
         this.pins.setParentDimensions(this.elDimensions);
         this.pins.resize(isInitialSetup);
@@ -136,6 +125,7 @@ RangeSlider.prototype = {
         }
     },
     handleWindowResize(ev) {
+        console.log('handleWindowResize');
         clearTimeout(this.wrt);
         this.wrt = setTimeout(() => this.resize(), 60);
     },
@@ -144,8 +134,6 @@ RangeSlider.prototype = {
      * tad uzskatām, ka nevajag taisīt pin kustību
      */
     handleStart(ev) {
-        //console.log("handleStart", this.position.x, this.offset.x); 
-
         this.isMove = false;
 
         this.pin = this.pins.findByPosition(this.translateX(ev.x), this.translateY(ev.y));
@@ -153,7 +141,7 @@ RangeSlider.prototype = {
             this.isMove = true;
             this.pin.startMove();
 
-            this.fire('startmove', [this.getValue()]);
+            this.fire('startmove', [this.formatPinForMoveEvent(this.pin)]);
         }
     },
     handleEnd(ev) {
@@ -166,7 +154,7 @@ RangeSlider.prototype = {
         this.isMove = false;
 
         this.fire('change', [this.getValue()]);
-        this.fire('endmove', [this.getValue()]);
+        this.fire('endmove', [this.formatPinForMoveEvent(this.pin)]);
     },
     handleMove(ev) {
         if (!this.isMove) {
@@ -175,40 +163,18 @@ RangeSlider.prototype = {
 
         this.pin.move(ev.offset.x, ev.offset.y);
 
+        this.pins.vizualize(this.pin);
+
         this.fire('move', [this.formatPinForMoveEvent(this.pin)]);
     },
     handleTap(ev) {
-        /**
-         * x, y vērtības ir relatīvas pret dokumentu
-         * transformējam tās relatīvas pret parent elementu
-         *
-         * Centrējam pin pret tap vietu
-         */
-        this.position.x = this.boundryX(this.translateX(ev.x) - (this.pinDimensions.width/2));
-        this.position.y = this.boundryY(this.translateY(ev.y) - (this.pinDimensions.height/2));
-
-        // Notīrām move offset vērtības
-        this.offset.x = 0;
-        this.offset.y = 0;
-
-        this.isMove = false;
-
-        this.vizualize();
-        this.calcValue();
-
-        this.fire('move', [this.value.x, this.value]);
+        
     },
     translateX(x) {
         return x - this.elOffset.left
     },
     translateY(y) {
         return y - this.elOffset.top
-    },
-    boundryX(x) {
-        return boundry(x, 0, this.elDimensions.width - this.pinDimensions.width)
-    },
-    boundryY(y) {
-        return boundry(y, 0, this.elDimensions.height - this.pinDimensions.height)
     },
     /**
      * Ja ir tikai viens pin, tad atgriežam vērtību nevis masīvu
@@ -221,7 +187,7 @@ RangeSlider.prototype = {
         );
     },
     setValue(values) {
-        values = values.map(value => formatPinValue(value));
+        this.values = this.formatValues(values);
         
         values.forEach((value, index) => {
             this.pins.items[index].setValue({
@@ -230,12 +196,14 @@ RangeSlider.prototype = {
             })
         })
 
-        this.pins.resize();
+        this.pins.vizualize();
     },
-    getPins() {
-        return arrayFirstIfSingleItem(
-            this.pins.getPins(this.direction, value => this.convertValueRelativeToReal(value))
-        );
+    formatValues(values) {
+        if (!isArray(values)) {
+            values = [values];
+        }
+
+        return values.map(value => this.convertValueRealToRelative(formatValue(value, this.direction)));
     },
     /**
      * Konvertējam reālo padoto vērtību uz iekšējās lietošanas vērtību (0..1)

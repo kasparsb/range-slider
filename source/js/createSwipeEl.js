@@ -1,26 +1,27 @@
-function createSwipeEl(parent) {
-    let el = document.createElement('div');
+import create from 'dom-helpers/src/create';
+import append from 'dom-helpers/src/append';
 
-    applyStyle(el);
-
-    parent.appendChild(el);
+let style = {
+    display: 'block',
+    position: 'absolute',
     
-    return el;
+    top: '-40px',
+    bottom: '-40px',
+    left: '-20px',
+    right: '-20px',
+
+    zIndex: '2'
+    //background: 'rgba(255,34,34,0.4)'
 }
 
-function applyStyle(el) {
-    el.style.display = 'block';
-    el.style.position = 'absolute';
-    
-    
-    el.style.top = '-40px';
-    el.style.bottom = '-40px';
-    el.style.left = '-20px';
-    el.style.right = '-20px';
+function createSwipeEl(parent) {
+    let el = create('div', {
+        style: style
+    });
 
-    el.style.zIndex =  '2';
+    append(parent, el);
 
-    //el.style.background = 'rgba(255,34,34,0.4)'
+    return el;
 }
 
 export default createSwipeEl;

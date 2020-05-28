@@ -1,16 +1,22 @@
-import getElementDimensions from './getElementDimensions';
 import findNodeByIndex from './findNodeByIndex';
-import createEl from './createEl';
+import getDimensions from 'dom-helpers/src/getDimensions';
+import create from 'dom-helpers/src/create';
 
-function create(index, alreadyDefinedElements) {
+function createFill(index, alreadyDefinedElements, container) {
     let el = findNodeByIndex(alreadyDefinedElements, index);
 
-    el = el ? el : createEl('rangeslider__track-fill', 'div');
+    if (!el) {
+        el = create('div', {
+            style: {
+                left: 0,
+                width: 0
+            }
+        });
+
+        container.appendChild(el)
+    }
 
     el.className = 'rangeslider__track-fill rangeslider__track-fill-'+index;
-
-    el.style.left = 0;
-    el.style.width = 0;
 
     return {
         index: index,
@@ -33,13 +39,15 @@ function TrackFillsList(pinsCount, container) {
     // track fill būs par vienu vairāk kā pinsCount
     // Viens pirms, otrs pēc pin
     for (let i = 0; i < pinsCount+1; i++) {
-        this.items.push(create(i, alreadyDefinedElements))
+        this.items.push(createFill(i, alreadyDefinedElements, this.container))
     }
-
-    this.items.forEach(item => this.container.appendChild(item.el))
 }
 
 TrackFillsList.prototype = {
+    resize(isInitialSetup) {
+        this.dimensions = getDimensions(this.container);
+    },
+
     vizualize(pinsPosition) {
         let prevX = 0;
 
@@ -52,26 +60,16 @@ TrackFillsList.prototype = {
         this.setPosition(this.items.length-1, prevX, this.dimensions.width - prevX);
     },
 
-    resize(isInitialSetup) {
-        this.dimensions = getElementDimensions(this.container);
+    setPosition(index, left, width) {
+        this.setProp(index, 'left', left);
+        this.setProp(index, 'width', width);
     },
 
-    setPosition(index, left, width) {
-        let needRedraw = false;
-
-        if (this.items[index].left != left) {
-            this.items[index].left = left;
-            needRedraw = true;
-        }
-
-        if (this.items[index].width != width) {
-            this.items[index].width = width;
-            needRedraw = true;
-        }
-
-        if (needRedraw) {
-            this.items[index].el.style.left = this.items[index].left+'px';
-            this.items[index].el.style.width = this.items[index].width+'px';
+    setProp(index, propName, value) {
+        if (this.items[index][propName] != value) {
+            this.items[index][propName] = value;
+            
+            this.items[index].el.style[propName] = value+'px';
         }
     }
 }

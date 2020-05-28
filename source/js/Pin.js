@@ -1,8 +1,7 @@
 import boundry from './boundry';
-import createEl from './createEl';
+import create from 'dom-helpers/src/create';
 import isBetween from './isBetween';
-import setCssTransform from './setCssTransform';
-import getElementOuterDimensions from './getElementOuterDimensions';
+import getOuterDimensions from 'dom-helpers/src/getOuterDimensions';
 
 function roundToWholeStep(value, stepsCount, width) {
     let stepWidth = width / stepsCount;
@@ -22,9 +21,7 @@ function roundToWholeStep(value, stepsCount, width) {
 }
 
 function Pin(el) {
-    this.el = el ? el : createEl('rangeslider__pin', 'a');
-
-    this.vizualizeCb = function(){};
+    this.el = el ? el : create('a', {className: 'rangeslider__pin'});
 
     this.prev = undefined;
     this.next = undefined;
@@ -65,10 +62,6 @@ function Pin(el) {
     };
 }
 Pin.prototype = {
-    
-    onVizualize(cb) {
-        this.vizualizeCb = cb;
-    },
 
     setSafePadding(padding) {
         this.safePadding = padding;
@@ -90,8 +83,6 @@ Pin.prototype = {
     },
 
     setValue(value) {
-        console.log(value, this.index);
-
         this.value.x = value.x;
         this.value.y = value.y;
     },
@@ -128,38 +119,35 @@ Pin.prototype = {
 
     endMove() {
         this.startMove();
-
         this.calcValue();
     },
 
     move(x, y) {
         this.setOffset(x, y);
         this.calcValue();
-
-        this.vizualize();
     },
 
     vizualize() {
-        setCssTransform(
-            this.el,
+        this.setTranslate(
             this.boundryX(this.position.x + this.offset.x),
             //this.boundryY(this.position.y + this.offset.y),
             0
         )
+    },
 
-        this.fireVizualize();
+    setTranslate(x, y) {
+        this.el.style.transform = 'translate('+x+'px,'+y+'px)'
     },
 
     resize(isInitialSetup) {
-        this.dimensions = getElementOuterDimensions(this.el);
+        this.dimensions = getOuterDimensions(this.el);
 
         // Recalculate position based on parent element dimensions
         this.position.x = this.parentDimensions.width * this.value.x;
         this.position.y = this.parentDimensions.height * this.value.y;
 
-        this.calcValue();
-
         if (!isInitialSetup) {
+            this.calcValue();
             this.vizualize();    
         }        
     },
@@ -181,6 +169,14 @@ Pin.prototype = {
             x,
             this.position.x - this.safePadding,
             this.position.x + this.dimensions.width + this.safePadding
+        )
+    },
+
+    isY(y) {
+        return isBetween(
+            y,
+            this.position.y - this.safePadding,
+            this.position.y + this.dimensions.height + this.safePadding
         )
     },
 
@@ -213,19 +209,19 @@ Pin.prototype = {
         )
     },
 
-    getPosition() {
-        return {
-            x: this.boundryX(this.position.x + this.offset.x),
-            y: this.boundryY(this.position.y + this.offset.y)
-        }
+    getX() {
+        return this.boundryX(this.position.x + this.offset.x)
     },
 
-    isY(y) {
-        return isBetween(
-            y,
-            this.position.y - this.safePadding,
-            this.position.y + this.dimensions.height + this.safePadding
-        )
+    getY() {
+        return this.boundryY(this.position.y + this.offset.y)
+    },
+
+    getPosition() {
+        return {
+            x: this.getX(),
+            y: this.getY()
+        }
     },
 
     boundryX(x) {
@@ -265,10 +261,6 @@ Pin.prototype = {
 
     boundryY(y) {
         return boundry(y, 0, this.parentDimensions.height - this.dimensions.height)
-    },
-
-    fireVizualize() {
-        this.vizualizeCb(this);
     }
 }
 
