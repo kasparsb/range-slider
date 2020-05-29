@@ -38,9 +38,9 @@ function RangeSlider(configuration) {
      */
     this.direction = this.config.get('direction', ['x']);
 
-    this.min = formatValue(this.config.get('min', {x: 0, y: 0}), this.direction);
-    this.max = formatValue(this.config.get('max', {x: 1, y: 1}), this.direction);
-    this.step = formatValue(this.config.get('step', {x: 0, y: 0}), this.direction);
+    this.min = formatValue(this.config.get('min', {x: 0, y: 0}), this.direction, 0);
+    this.max = formatValue(this.config.get('max', {x: 1, y: 1}), this.direction, 1);
+    this.step = formatValue(this.config.get('step', {x: 0, y: 0}), this.direction, 0);
     /**
      * Ja step ir 0, tad steps skaits būs Infinity
      * tas ir neierobežots skaits soļu
@@ -125,7 +125,6 @@ RangeSlider.prototype = {
         }
     },
     handleWindowResize(ev) {
-        console.log('handleWindowResize');
         clearTimeout(this.wrt);
         this.wrt = setTimeout(() => this.resize(), 60);
     },
@@ -211,7 +210,7 @@ RangeSlider.prototype = {
     convertValueRealToRelative(value) {
         return {
             x: valueRealToRelative(value.x, this.min.x, this.max.x),
-            y: valueRealToRelative(value.y, this.min.y, this.max.y)    
+            y: valueRealToRelative(value.y, this.min.y, this.max.y)
         }
     },
     /**

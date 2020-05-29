@@ -5,10 +5,14 @@
  * no tā kāds ir slider direction (horizontāls:x, vai vertikāls:y)
  * Attiecīgi šo vērtību uzskatām par x, ja direction ir x. Tas pats ar y
  */
-function formatValue(value, direction) {
+function formatValue(value, direction, defaultValue) {
+    if (typeof defaultValue === 'undefined') {
+        defaultValue = 0;
+    }
+
     let r = {
-        x: 0,
-        y: 0
+        x: defaultValue,
+        y: defaultValue
     }
 
     // Šajā gadījumā jābūt tikai vienam virzienam (x vai y)
@@ -16,8 +20,8 @@ function formatValue(value, direction) {
         r[direction[0]] = value
     }
     else {
-        r.x = typeof value.x === 'undefined' ? 0 : value.x;
-        r.y = typeof value.y === 'undefined' ? 0 : value.y;
+        r.x = typeof value.x === 'undefined' ? defaultValue : value.x;
+        r.y = typeof value.y === 'undefined' ? defaultValue : value.y;
     }
 
     return r;
