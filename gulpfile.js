@@ -14,9 +14,9 @@ var babelify = require('babelify');
 var pkg = require('./package.json');
 
 var files = {
-    js: './source/js/RangeSlider.js',
-    less: './source/less/rangeslider.less',
-    lesss: './source/less/**/*.less',
+    js: './src/js/RangeSlider.js',
+    less: './src/less/rangeslider.less',
+    lesss: './src/less/**/*.less',
     dest: './dist'
 }
 
@@ -53,7 +53,7 @@ function bundleJs(browserify, compress, firstRun) {
         console.log(er.annotated);
     }
 
-    var destFileName = 'rangeslider.min.js';
+    var destFileName = 'range-slider.min.js';
 
     var s = browserify;
 
